@@ -20,8 +20,17 @@ var (
 	client = &http.Client{Transport: tr}
 )
 
+type Logger struct {
+	retryablehttp.Logger
+}
+
+func (l *Logger) Printf(string, ...interface{}) {
+}
+
 func Get(url string) error {
+	logger := &Logger{}
 	retryClient := retryablehttp.NewClient()
+	retryClient.Logger = retryablehttp.Logger(logger)
 	retryClient.RetryMax = 10
 	retryClient.HTTPClient = client
 
@@ -42,7 +51,9 @@ func Get(url string) error {
 
 func POST(url string, payload string) error {
 
+	logger := &Logger{}
 	retryClient := retryablehttp.NewClient()
+	retryClient.Logger = retryablehttp.Logger(logger)
 	retryClient.RetryMax = 10
 	retryClient.HTTPClient = client
 
