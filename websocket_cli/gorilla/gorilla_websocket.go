@@ -1,10 +1,10 @@
 package gorillawebsocketclient
 
 import (
+	"crypto/tls"
 	"flag"
 	"fmt"
 	"log"
-	"net/url"
 	"os"
 	"os/signal"
 	"time"
@@ -24,19 +24,21 @@ func sendReacv(conn *websocket.Conn, message string) (int, error) {
 	return len(m), nil
 }
 
-func Start(addr string, message []string) {
+func Start(addr string, message []string) error {
 	flag.Parse()
 	log.SetFlags(0)
 
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	u := url.URL{Scheme: "ws", Host: addr}
-	log.Printf("connecting to %s", u.String())
-
-	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	dailer := websocket.Dialer{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
+	}
+	c, _, err := dailer.Dial(addr, nil)
 	if err != nil {
-		log.Fatal("dial:", err)
+		return err
 	}
 	defer c.Close()
 
@@ -48,14 +50,15 @@ func Start(addr string, message []string) {
 	for seq < len(message) {
 		select {
 		case <-done:
-			return
+			return nil
 		case <-ticker.C:
 			_, err := sendReacv(c, message[seq])
 			if err != nil {
 				log.Println("write:", err)
-				return
+				return err
 			}
 			seq++
 		}
 	}
+	return nil
 }

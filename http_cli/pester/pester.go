@@ -20,7 +20,6 @@ func init() {
 			InsecureSkipVerify: true,
 		},
 	}
-	client.Concurrency = 100
 }
 
 func Get(url string) error {

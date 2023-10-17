@@ -8,7 +8,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"net/url"
 	"os"
 	"os/signal"
 	"time"
@@ -30,19 +29,16 @@ func sendReacv(conn *fastws.Conn, message string) (int, error) {
 	return len(m), nil
 }
 
-func Start(addr string, message []string) {
+func Start(addr string, message []string) error {
 	flag.Parse()
 	log.SetFlags(0)
 
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	u := url.URL{Scheme: "ws", Host: addr}
-	log.Printf("connecting to %s", u.String())
-
-	c, err := fastws.Dial(u.String())
+	c, err := fastws.Dial(addr)
 	if err != nil {
-		log.Fatal("dial:", err)
+		return err
 	}
 	defer c.Close()
 
@@ -54,14 +50,15 @@ func Start(addr string, message []string) {
 	for seq < len(message) {
 		select {
 		case <-done:
-			return
+			return nil
 		case <-ticker.C:
 			_, err := sendReacv(c, message[seq])
 			if err != nil {
 				log.Println("write:", err)
-				return
+				return err
 			}
 			seq++
 		}
 	}
+	return nil
 }

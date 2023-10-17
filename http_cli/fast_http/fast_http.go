@@ -4,18 +4,23 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"runtime"
 
 	"github.com/valyala/fasthttp"
 )
 
-var (
-	getCli  = fasthttp.Client{}
-	postCli = fasthttp.Client{}
-)
+var getCli fasthttp.Client
+var postCli fasthttp.Client
 
 func init() {
+	getCli = fasthttp.Client{
+		MaxConnsPerHost: runtime.GOMAXPROCS(-1),
+	}
 	getCli.TLSConfig = &tls.Config{
 		InsecureSkipVerify: true,
+	}
+	postCli = fasthttp.Client{
+		MaxConnsPerHost: runtime.GOMAXPROCS(-1),
 	}
 	postCli.TLSConfig = &tls.Config{
 		InsecureSkipVerify: true,

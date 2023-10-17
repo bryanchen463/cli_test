@@ -12,6 +12,7 @@ import (
 	pestercli "bryanchen463/cli_test/http_cli/pester"
 	reqcli "bryanchen463/cli_test/http_cli/req"
 	"bryanchen463/cli_test/utils"
+	gorillawebsocketclient "bryanchen463/cli_test/websocket_cli/gorilla"
 	"fmt"
 	"math/rand"
 	"reflect"
@@ -34,6 +35,8 @@ func generateRandomString(length int) string {
 }
 
 func main() {
+	testWs()
+	return
 	testRequest()
 	fmt.Println(Result())
 	return
@@ -84,8 +87,8 @@ func wrapperPost(f func(url string, payload string) error) fn {
 func testRequest() {
 	getFuncs := []fn{http.GET, fasthttpcli.Get, gohttpclient.Get, goretryablenhttpcli.Get, grequestscli.Get, heimdallcli.Get, pestercli.Get, reqcli.Get, gorestycli.Get}
 	postFuncs := []postFn{http.POST, fasthttpcli.Post, gohttpclient.Post, goretryablenhttpcli.POST, grequestscli.Post, heimdallcli.Post, pestercli.Post, reqcli.Post, gorestycli.Post}
-	// times := []int{5000, 10000, 100000}
-	times := []int{100}
+	times := []int{5000, 10000, 100000}
+	// times := []int{100}
 	paylaods := []string{}
 	paylaodsLen := []int{100, 1024}
 	for _, l := range paylaodsLen {
@@ -116,4 +119,26 @@ func testRequest() {
 			fmt.Println(Result())
 		}
 	}
+}
+
+type wsFn func(string, []string) error
+
+func testWs() {
+	wsFuncs := []wsFn{gorillawebsocketclient.Start}
+	// times := []int{100}
+	messages := make([]string, 0, 5000)
+	for i := 0; i < cap(messages); i++ {
+		randomString := generateRandomString(100)
+		messages = append(messages, randomString)
+	}
+	for _, fn := range wsFuncs {
+		funcValue := reflect.ValueOf(fn)
+		funcName := runtime.FuncForPC(funcValue.Pointer()).Name()
+		name := fmt.Sprintf("%s", funcName)
+		benchFn(func() error {
+			return fn(utils.WsUrl, messages)
+		}, 100, name)
+	}
+	fmt.Printf("-------------------------ws %d--------------------------\n", 100)
+	fmt.Println(Result())
 }

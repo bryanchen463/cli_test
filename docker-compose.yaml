@@ -1,0 +1,27 @@
+version: '1.0.0'
+
+services:
+  fiber_service:
+    build: 
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - 8090
+    expose:
+      - 8090
+
+  nginx_service:
+    build: 
+      context: ./nginx 
+      dockerfile: Dockerfile
+
+    depends_on:
+      - fiber_service
+    ports:
+      - 80
+      - 443
+
+networks:
+  nginx_server:
+    network_mode: "bridge"
+    driver: nginx
