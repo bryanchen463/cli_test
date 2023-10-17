@@ -4,10 +4,13 @@ import (
 	fasthttpcli "bryanchen463/cli_test/http_cli/fast_http"
 	"bryanchen463/cli_test/http_cli/gentleman"
 	gohttpclient "bryanchen463/cli_test/http_cli/go-http-client"
+	gorestycli "bryanchen463/cli_test/http_cli/go-resty"
 	goretryablenhttpcli "bryanchen463/cli_test/http_cli/go-retryablenhttp"
 	grequestscli "bryanchen463/cli_test/http_cli/grequests"
 	heimdallcli "bryanchen463/cli_test/http_cli/heimdall"
 	"bryanchen463/cli_test/http_cli/http"
+	pestercli "bryanchen463/cli_test/http_cli/pester"
+	reqcli "bryanchen463/cli_test/http_cli/req"
 	"bryanchen463/cli_test/utils"
 	"fmt"
 	"math/rand"
@@ -79,10 +82,10 @@ func wrapperPost(f func(url string, payload string) error) fn {
 }
 
 func testRequest() {
-	getFuncs := []fn{http.GET, fasthttpcli.Get, gohttpclient.Get, goretryablenhttpcli.Get, grequestscli.Get, heimdallcli.Get}
-	postFuncs := []postFn{http.POST, fasthttpcli.Post, gohttpclient.Post, goretryablenhttpcli.POST, grequestscli.Post, heimdallcli.Post}
-	times := []int{5000, 10000, 100000}
-	// times := []int{1000}
+	getFuncs := []fn{http.GET, fasthttpcli.Get, gohttpclient.Get, goretryablenhttpcli.Get, grequestscli.Get, heimdallcli.Get, pestercli.Get, reqcli.Get, gorestycli.Get}
+	postFuncs := []postFn{http.POST, fasthttpcli.Post, gohttpclient.Post, goretryablenhttpcli.POST, grequestscli.Post, heimdallcli.Post, pestercli.Post, reqcli.Post, gorestycli.Post}
+	// times := []int{5000, 10000, 100000}
+	times := []int{100}
 	paylaods := []string{}
 	paylaodsLen := []int{100, 1024}
 	for _, l := range paylaodsLen {

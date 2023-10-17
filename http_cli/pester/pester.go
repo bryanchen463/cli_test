@@ -1,4 +1,4 @@
-package heimdallcli
+package pestercli
 
 import (
 	"bytes"
@@ -8,50 +8,28 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/gojek/heimdall/v7/hystrix"
+	"github.com/sethgrid/pester"
 )
 
-type myClient struct {
-	client http.Client
-}
-
-func NewMyClient() *myClient {
-	return &myClient{client: http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: true,
-			},
-		},
-	},
-	}
-}
-
-func (c *myClient) Do(req *http.Request) (*http.Response, error) {
-	return c.client.Do(req)
-}
-
-var client *hystrix.Client
+var client *pester.Client
 
 func init() {
-	myClient := NewMyClient()
-	client = hystrix.NewClient(
-		hystrix.WithMaxConcurrentRequests(100),
-		hystrix.WithHTTPClient(myClient),
-	)
+	client = pester.New()
+	client.Transport = &http.Transport{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
+	}
+	client.Concurrency = 100
 }
 
 func Get(url string) error {
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		fmt.Println("创建请求失败:", err)
-		return err
-	}
-	response, err := client.Do(req)
+	resp, err := client.Get(url)
 	if err != nil {
 		return err
 	}
-	defer response.Body.Close()
-	body, err := io.ReadAll(response.Body)
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
