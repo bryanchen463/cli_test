@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/hashicorp/go-cleanhttp"
@@ -52,7 +52,7 @@ func POST(url string, payload string) error {
 	// 读取并处理响应
 	if resp.Status == "200 OK" {
 		// 在这里处理成功响应的逻辑
-		_, err := ioutil.ReadAll(resp.Body)
+		_, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return err
 		}

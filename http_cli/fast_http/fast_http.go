@@ -23,24 +23,30 @@ func init() {
 }
 
 func Get(url string) error {
-	statusCode, body, err := getCli.Get([]byte("/"), url)
-	if statusCode != 200 {
+	req := fasthttp.AcquireRequest()
+	defer fasthttp.ReleaseRequest(req)
+	req.Header.SetMethod("GET")
+	resp := fasthttp.AcquireResponse()
+	defer fasthttp.ReleaseResponse(resp)
+	err := getCli.Do(req, resp)
+	if resp.StatusCode() != 200 {
 		return errors.New("status code is not equal 200")
 	}
-	if "Hello, World 👋!" != string(body) {
-		return errors.New("response error")
+	if "Hello, World 👋!" != string(resp.Body()) {
+		return errors.New("response error" + string(resp.Body()))
 	}
 	return err
 }
 
 func Post(url string, payload string) error {
-
 	req := fasthttp.AcquireRequest()
+	defer fasthttp.ReleaseRequest(req)
 	req.SetRequestURI(url)
 	req.Header.SetMethod("POST")
 	req.Header.SetContentType("application/x-www-form-urlencoded")
 	req.SetBody([]byte(fmt.Sprintf("name=%s", payload)))
 	resp := fasthttp.AcquireResponse()
+	defer fasthttp.ReleaseResponse(resp)
 	err := postCli.Do(req, resp)
 	// fmt.Println(string(resp.Body()))
 	if string(resp.Body()) != payload {

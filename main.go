@@ -5,11 +5,14 @@ import (
 	"bryanchen463/cli_test/http_cli/gentleman"
 	gohttpclient "bryanchen463/cli_test/http_cli/go-http-client"
 	goretryablenhttpcli "bryanchen463/cli_test/http_cli/go-retryablenhttp"
+	grequestscli "bryanchen463/cli_test/http_cli/grequests"
+	heimdallcli "bryanchen463/cli_test/http_cli/heimdall"
 	"bryanchen463/cli_test/http_cli/http"
 	"bryanchen463/cli_test/utils"
 	"fmt"
 	"math/rand"
 	"reflect"
+	"runtime"
 	"time"
 )
 
@@ -28,6 +31,7 @@ func generateRandomString(length int) string {
 
 func main() {
 	testRequest()
+	fmt.Println(Result())
 	return
 	benchFn(func() error {
 		return http.GET(utils.Url)
@@ -74,9 +78,10 @@ func wrapperPost(f func(url string, payload string) error) fn {
 }
 
 func testRequest() {
-	getFuncs := []fn{http.GET, fasthttpcli.Get, gohttpclient.Get, goretryablenhttpcli.Get}
-	postFuncs := []postFn{http.POST, fasthttpcli.Post, gohttpclient.Post, goretryablenhttpcli.POST}
+	getFuncs := []fn{http.GET, fasthttpcli.Get, gohttpclient.Get, goretryablenhttpcli.Get, grequestscli.Get, heimdallcli.Get}
+	postFuncs := []postFn{http.POST, fasthttpcli.Post, gohttpclient.Post, goretryablenhttpcli.POST, grequestscli.Post, heimdallcli.Post}
 	times := []int{5000, 10000, 100000}
+	// times := []int{1000}
 	paylaods := []string{}
 	paylaodsLen := []int{100, 1024}
 	for _, l := range paylaodsLen {
@@ -85,18 +90,26 @@ func testRequest() {
 	}
 	for _, t := range times {
 		for _, fn := range getFuncs {
-			name := fmt.Sprintf("%s_%d", reflect.TypeOf(fn), t)
+			funcValue := reflect.ValueOf(fn)
+			funcName := runtime.FuncForPC(funcValue.Pointer()).Name()
+			name := fmt.Sprintf("%s_%d", funcName, t)
 			benchFn(func() error {
 				return fn(utils.Url)
 			}, t, name)
 		}
-		for _, fn := range postFuncs {
-			for _, payload := range paylaods {
-				name := fmt.Sprintf("%s_%d_%d", reflect.TypeOf(fn), len(payload), t)
+		fmt.Printf("-------------------------GET %d--------------------------\n", t)
+		fmt.Println(Result())
+		for _, payload := range paylaods {
+			for _, fn := range postFuncs {
+				funcValue := reflect.ValueOf(fn)
+				funcName := runtime.FuncForPC(funcValue.Pointer()).Name()
+				name := fmt.Sprintf("%s_%d_%d", funcName, len(payload), t)
 				benchFn(func() error {
 					return fn(utils.EchoUrl, payload)
 				}, t, name)
 			}
+			fmt.Printf("-------------------------POST %d %d--------------------------\n", t, len(payload))
+			fmt.Println(Result())
 		}
 	}
 }

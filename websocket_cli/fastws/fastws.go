@@ -1,4 +1,8 @@
-package gorillawebsocketclient
+package fastwscli
+
+// Copyright 2015 The Gorilla WebSocket Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
 
 import (
 	"flag"
@@ -9,12 +13,14 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/dgrr/fastws"
 	"github.com/gorilla/websocket"
 )
 
-func sendReacv(conn *websocket.Conn, message string) (int, error) {
+func sendReacv(conn *fastws.Conn, message string) (int, error) {
 	conn.WriteMessage(websocket.TextMessage, []byte(message))
-	_, m, err := conn.ReadMessage()
+	buff := make([]byte, len(message))
+	_, m, err := conn.ReadMessage(buff)
 	if err != nil {
 		return 0, err
 	}
@@ -34,7 +40,7 @@ func Start(addr string, message []string) {
 	u := url.URL{Scheme: "ws", Host: addr}
 	log.Printf("connecting to %s", u.String())
 
-	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	c, err := fastws.Dial(u.String())
 	if err != nil {
 		log.Fatal("dial:", err)
 	}

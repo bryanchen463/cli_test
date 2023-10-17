@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"path"
+	"sort"
 	"sync"
 	"time"
 )
@@ -46,11 +48,20 @@ func benchFn(fn func() error, times int, name string) {
 
 func Result() string {
 	res := ""
+	var speedList []SpeedInfo
 	speedInfos.Range(func(key, value any) bool {
 		speedInfo := value.(SpeedInfo)
-		v, _ := json.Marshal(speedInfo)
-		res += string(v) + "\n"
+		speedList = append(speedList, speedInfo)
 		return true
 	})
+	sort.Slice(speedList, func(i, j int) bool {
+		return speedList[i].Cost > speedList[j].Cost
+	})
+	for _, l := range speedList {
+		l.Name = path.Base(l.Name)
+		v, _ := json.Marshal(l)
+		res += string(v) + "\n"
+	}
+	speedInfos = sync.Map{}
 	return res
 }

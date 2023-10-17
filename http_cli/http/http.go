@@ -5,7 +5,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 )
 
@@ -44,7 +44,7 @@ func POST(url string, payload string) error {
 	// 读取并处理响应
 	if resp.Status == "200 OK" {
 		// 在这里处理成功响应的逻辑
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return err
 		}
@@ -72,7 +72,7 @@ func GET(url string) error {
 	defer resp.Body.Close()
 
 	// Read and print the response
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("Error reading response:", err)
 		return err
