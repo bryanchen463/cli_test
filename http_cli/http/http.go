@@ -62,9 +62,13 @@ func POST(url string, payload string) error {
 func GET(url string) error {
 
 	// URL with an unsafe certificate (replace with your own URL)
-
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		fmt.Println("创建请求失败:", err)
+		return err
+	}
 	// Make a GET request
-	resp, err := client.Get(url)
+	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return err

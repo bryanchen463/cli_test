@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 
 	"github.com/gojek/heimdall/v7/hystrix"
 	"gopkg.in/h2non/gentleman.v2/plugins/headers"
@@ -37,18 +36,18 @@ var client *hystrix.Client
 func init() {
 	myClient := NewMyClient()
 	client = hystrix.NewClient(
-		hystrix.WithHystrixTimeout(1100*time.Millisecond),
 		hystrix.WithMaxConcurrentRequests(100),
-		hystrix.WithErrorPercentThreshold(20),
 		hystrix.WithHTTPClient(myClient),
 	)
 }
 
 func Get(url string) error {
-
-	header := http.Header{}
-	headers.Set("Content-Type", "application/x-www-form-urlencoded")
-	response, err := client.Get(url, header)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		fmt.Println("创建请求失败:", err)
+		return err
+	}
+	response, err := client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -65,14 +64,27 @@ func Get(url string) error {
 
 func Post(url string, payload string) error {
 
-	header := http.Header{}
 	headers.Set("Content-Type", "application/x-www-form-urlencoded")
 	postData := []byte(fmt.Sprintf(`name=%s`, payload))
-	response, err := client.Post(url, bytes.NewBuffer(postData), header)
+	// 设置请求头
+	// Create an HTTP client with the custom transport
+	// 创建一个请求
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(postData))
+	if err != nil {
+		fmt.Println("创建请求失败:", err)
+		return err
+	}
+
+	// 设置请求头
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	response, err := client.Do(req)
 	if err != nil {
 		return err
 	}
 	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		return fmt.Errorf("status: %d", response.StatusCode)
+	}
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		return err

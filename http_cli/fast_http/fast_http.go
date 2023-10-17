@@ -26,6 +26,7 @@ func Get(url string) error {
 	req := fasthttp.AcquireRequest()
 	defer fasthttp.ReleaseRequest(req)
 	req.Header.SetMethod("GET")
+	req.SetRequestURI(url)
 	resp := fasthttp.AcquireResponse()
 	defer fasthttp.ReleaseResponse(resp)
 	err := getCli.Do(req, resp)
