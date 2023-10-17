@@ -45,7 +45,6 @@ func main() {
 				log.Println("read:", err)
 				break
 			}
-			log.Printf("recv: %s", msg)
 
 			if err = c.WriteMessage(mt, msg); err != nil {
 				log.Println("write:", err)
@@ -55,5 +54,8 @@ func main() {
 
 	}))
 
-	app.ListenTLS(":8090", "../nginx/cert/server.crt", "../nginx/key/server.key")
+	err := app.ListenTLS(":8090", "../nginx/cert/server.crt", "../nginx/cert/server.key")
+	if err != nil {
+		log.Fatal(err)
+	}
 }
