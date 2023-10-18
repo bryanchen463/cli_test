@@ -35,7 +35,6 @@ var client *hystrix.Client
 func init() {
 	myClient := NewMyClient()
 	client = hystrix.NewClient(
-		hystrix.WithMaxConcurrentRequests(100),
 		hystrix.WithHTTPClient(myClient),
 	)
 }

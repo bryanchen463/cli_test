@@ -28,6 +28,9 @@ require (
 	github.com/gaukas/godicttls v0.0.4 // indirect
 	github.com/go-resty/resty/v2 v2.10.0 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
+	github.com/gobwas/httphead v0.1.0 // indirect
+	github.com/gobwas/pool v0.2.1 // indirect
+	github.com/gobwas/ws v1.3.0 // indirect
 	github.com/gojek/valkyrie v0.0.0-20180215180059-6aee720afcdf // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
@@ -37,10 +40,12 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/imroc/req/v3 v3.42.1 // indirect
 	github.com/klauspost/compress v1.17.1 // indirect
+	github.com/lxzan/gws v1.6.13 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/nbio/st v0.0.0-20140626010706-e9e8d9816f32 // indirect
+	github.com/olahol/melody v1.1.4 // indirect
 	github.com/onsi/ginkgo/v2 v2.12.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
@@ -64,4 +69,5 @@ require (
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/tools v0.12.1-0.20230815132531-74c255bcf846 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	nhooyr.io/websocket v1.8.7 // indirect
 )

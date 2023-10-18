@@ -1,17 +1,20 @@
-package gorillawebsocketclient
+package nhooyrcli
 
 import (
+	"context"
 	"crypto/tls"
 	"flag"
 	"fmt"
 	"log"
+	"net/http"
 
-	"github.com/gorilla/websocket"
+	"nhooyr.io/websocket"
 )
 
 func sendReacv(conn *websocket.Conn, message string) (int, error) {
-	conn.WriteMessage(websocket.TextMessage, []byte(message))
-	_, m, err := conn.ReadMessage()
+	ctx := context.Background()
+	conn.Write(ctx, websocket.MessageText, []byte(message))
+	_, m, err := conn.Read(ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -25,16 +28,19 @@ func Start(addr string, message []string) error {
 	flag.Parse()
 	log.SetFlags(0)
 
-	dailer := websocket.Dialer{
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: true,
+	c, _, err := websocket.Dial(context.Background(), addr, &websocket.DialOptions{
+		HTTPClient: &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+				},
+			},
 		},
-	}
-	c, _, err := dailer.Dial(addr, nil)
+	})
 	if err != nil {
 		return err
 	}
-	defer c.Close()
+	defer c.Close(websocket.StatusNormalClosure, "finished")
 
 	seq := 0
 	for _, m := range message {

@@ -1,4 +1,4 @@
-package gorillawebsocketclient
+package fasthttpwscli
 
 import (
 	"crypto/tls"
@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/gorilla/websocket"
+	"github.com/fasthttp/websocket"
 )
 
 func sendReacv(conn *websocket.Conn, message string) (int, error) {

@@ -5,20 +5,18 @@ package fastwscli
 // license that can be found in the LICENSE file.
 
 import (
+	"crypto/tls"
 	"flag"
 	"fmt"
 	"log"
-	"os"
-	"os/signal"
 	"time"
 
 	"github.com/dgrr/fastws"
-	"github.com/gorilla/websocket"
 )
 
 func sendReacv(conn *fastws.Conn, message string) (int, error) {
-	conn.WriteMessage(websocket.TextMessage, []byte(message))
-	buff := make([]byte, len(message))
+	conn.WriteMessage(fastws.ModeText, []byte(message))
+	buff := make([]byte, 0, len(message))
 	_, m, err := conn.ReadMessage(buff)
 	if err != nil {
 		return 0, err
@@ -32,32 +30,22 @@ func sendReacv(conn *fastws.Conn, message string) (int, error) {
 func Start(addr string, message []string) error {
 	flag.Parse()
 	log.SetFlags(0)
-
-	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt)
-
-	c, err := fastws.Dial(addr)
+	c, err := fastws.DialTLS(addr, &tls.Config{
+		InsecureSkipVerify: true,
+	})
 	if err != nil {
 		return err
 	}
 	defer c.Close()
 
-	done := make(chan struct{})
-
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
-	seq := 0
-	for seq < len(message) {
-		select {
-		case <-done:
-			return nil
-		case <-ticker.C:
-			_, err := sendReacv(c, message[seq])
-			if err != nil {
-				log.Println("write:", err)
-				return err
-			}
-			seq++
+	for _, m := range message {
+
+		_, err := sendReacv(c, m)
+		if err != nil {
+			log.Println("write:", err)
+			return err
 		}
 	}
 	return nil

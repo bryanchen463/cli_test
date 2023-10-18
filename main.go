@@ -12,7 +12,12 @@ import (
 	pestercli "bryanchen463/cli_test/http_cli/pester"
 	reqcli "bryanchen463/cli_test/http_cli/req"
 	"bryanchen463/cli_test/utils"
+	fasthttpwscli "bryanchen463/cli_test/websocket_cli/fasthttp_ws"
+	fastwscli "bryanchen463/cli_test/websocket_cli/fastws"
+	gobwascli "bryanchen463/cli_test/websocket_cli/gobwas"
 	gorillawebsocketclient "bryanchen463/cli_test/websocket_cli/gorilla"
+	gwscli "bryanchen463/cli_test/websocket_cli/gws"
+	nhooyrcli "bryanchen463/cli_test/websocket_cli/nhooyr"
 	"fmt"
 	"math/rand"
 	"reflect"
@@ -36,8 +41,6 @@ func generateRandomString(length int) string {
 
 func main() {
 	testWs()
-	return
-	testRequest()
 	fmt.Println(Result())
 	return
 	benchFn(func() error {
@@ -124,7 +127,8 @@ func testRequest() {
 type wsFn func(string, []string) error
 
 func testWs() {
-	wsFuncs := []wsFn{gorillawebsocketclient.Start}
+	wsFuncs := []wsFn{gorillawebsocketclient.Start, fastwscli.Start, gobwascli.Start, nhooyrcli.Start, fasthttpwscli.Start, gwscli.Start}
+	// wsFuncs := []wsFn{fastwscli.Start, gobwascli.Start, gwscli.Start}
 	// times := []int{100}
 	messages := make([]string, 0, 5000)
 	for i := 0; i < cap(messages); i++ {
@@ -137,7 +141,7 @@ func testWs() {
 		name := fmt.Sprintf("%s", funcName)
 		benchFn(func() error {
 			return fn(utils.WsUrl, messages)
-		}, 100, name)
+		}, 10, name)
 	}
 	fmt.Printf("-------------------------ws %d--------------------------\n", 100)
 	fmt.Println(Result())
