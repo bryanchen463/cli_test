@@ -37,7 +37,8 @@ func Start(addr string, message []string) error {
 		return err
 	}
 	defer c.Close()
-
+	c.ReadTimeout = time.Second
+	c.WriteTimeout = time.Second
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 	for _, m := range message {

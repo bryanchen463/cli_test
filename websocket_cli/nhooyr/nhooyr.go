@@ -7,12 +7,15 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"nhooyr.io/websocket"
 )
 
 func sendReacv(conn *websocket.Conn, message string) (int, error) {
 	ctx := context.Background()
+	conn.SetWriteDeadline(time.Now().Add(time.Second))
+	conn.SetReadDeadline(time.Now().Add(time.Second))
 	conn.Write(ctx, websocket.MessageText, []byte(message))
 	_, m, err := conn.Read(ctx)
 	if err != nil {

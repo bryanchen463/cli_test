@@ -5,11 +5,14 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
 
 func sendReacv(conn *websocket.Conn, message string) (int, error) {
+	conn.SetWriteDeadline(time.Now().Add(time.Second))
+	conn.SetReadDeadline(time.Now().Add(time.Second))
 	conn.WriteMessage(websocket.TextMessage, []byte(message))
 	_, m, err := conn.ReadMessage()
 	if err != nil {

@@ -8,11 +8,14 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"time"
 
 	"github.com/gobwas/ws"
 )
 
 func sendReacv(conn net.Conn, message string) (int, error) {
+	conn.SetWriteDeadline(time.Now().Add(time.Second))
+	conn.SetReadDeadline(time.Now().Add(time.Second))
 	conn.Write([]byte(message))
 	buff := make([]byte, 0, len(message))
 	start := 0
@@ -44,7 +47,6 @@ func Start(addr string, message []string) error {
 		return err
 	}
 	defer c.Close()
-
 	seq := 0
 	for _, m := range message {
 		_, err := sendReacv(c, m)

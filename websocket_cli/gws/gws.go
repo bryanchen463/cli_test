@@ -3,6 +3,7 @@ package gwscli
 import (
 	"crypto/tls"
 	"log"
+	"time"
 
 	"github.com/lxzan/gws"
 )
@@ -14,6 +15,8 @@ type wsHandler struct {
 
 func (h *wsHandler) OnOpen(socket *gws.Conn) {
 	socket.WriteMessage(gws.OpcodeText, []byte(h.messages[h.curIndex]))
+	socket.SetWriteDeadline(time.Now().Add(time.Second))
+	socket.SetReadDeadline(time.Now().Add(time.Second))
 	h.curIndex += 1
 }
 func (h *wsHandler) OnClose(socket *gws.Conn, err error) {}
@@ -27,6 +30,8 @@ func (h *wsHandler) OnMessage(socket *gws.Conn, message *gws.Message) {
 		socket.NetConn().Close()
 		return
 	}
+	socket.SetWriteDeadline(time.Now().Add(time.Second))
+	socket.SetReadDeadline(time.Now().Add(time.Second))
 	socket.WriteMessage(gws.OpcodeText, []byte(h.messages[h.curIndex]))
 }
 func (h *wsHandler) OnPong(socket *gws.Conn, payload []byte) {}
