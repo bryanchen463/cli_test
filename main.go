@@ -40,7 +40,7 @@ func generateRandomString(length int) string {
 }
 
 func main() {
-	testWs()
+	testRequest()
 	fmt.Println(Result())
 	return
 	benchFn(func() error {
@@ -90,8 +90,8 @@ func wrapperPost(f func(url string, payload string) error) fn {
 func testRequest() {
 	getFuncs := []fn{http.GET, fasthttpcli.Get, gohttpclient.Get, goretryablenhttpcli.Get, grequestscli.Get, heimdallcli.Get, pestercli.Get, reqcli.Get, gorestycli.Get}
 	postFuncs := []postFn{http.POST, fasthttpcli.Post, gohttpclient.Post, goretryablenhttpcli.POST, grequestscli.Post, heimdallcli.Post, pestercli.Post, reqcli.Post, gorestycli.Post}
-	times := []int{5000, 10000, 100000}
-	// times := []int{100}
+	// times := []int{5000, 10000, 100000}
+	times := []int{100}
 	paylaods := []string{}
 	paylaodsLen := []int{100, 1024}
 	for _, l := range paylaodsLen {

@@ -56,7 +56,7 @@ func benchFn(fn func() error, times int, name string) {
 		} else {
 			success++
 		}
-		costs = append(costs, int64(time.Since(perStart).Microseconds()))
+		costs = append(costs, int64(time.Since(perStart).Milliseconds()))
 	}
 	since := time.Since(start)
 	// fmt.Printf("%s run %d cost: %dms\n", name, times, since.Milliseconds())
