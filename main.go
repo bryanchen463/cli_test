@@ -2,7 +2,6 @@ package main
 
 import (
 	fasthttpcli "bryanchen463/cli_test/http_cli/fast_http"
-	"bryanchen463/cli_test/http_cli/gentleman"
 	gohttpclient "bryanchen463/cli_test/http_cli/go-http-client"
 	gorestycli "bryanchen463/cli_test/http_cli/go-resty"
 	goretryablenhttpcli "bryanchen463/cli_test/http_cli/go-retryablenhttp"
@@ -16,7 +15,6 @@ import (
 	fastwscli "bryanchen463/cli_test/websocket_cli/fastws"
 	gobwascli "bryanchen463/cli_test/websocket_cli/gobwas"
 	gorillawebsocketclient "bryanchen463/cli_test/websocket_cli/gorilla"
-	gwscli "bryanchen463/cli_test/websocket_cli/gws"
 	nhooyrcli "bryanchen463/cli_test/websocket_cli/nhooyr"
 	"fmt"
 	"math/rand"
@@ -41,40 +39,10 @@ func generateRandomString(length int) string {
 
 func main() {
 	testRequest()
-	fmt.Println(Result())
-	return
-	benchFn(func() error {
-		return http.GET(utils.Url)
-	}, 10000, "http_10000")
-	benchFn(func() error {
-		return http.POST(utils.EchoUrl, "hello")
-	}, 10000, "http_post_10000")
-	benchFn(func() error {
-		return gentleman.Get(utils.Url)
-	}, 10000, "gentleman_10000")
-	benchFn(func() error {
-		return gentleman.Post(utils.EchoUrl, "hello")
-	}, 10000, "gentleman_post_10000")
-	benchFn(func() error {
-		return fasthttpcli.Get(utils.Url)
-	}, 10000, "fasthttp_10000")
-	benchFn(func() error {
-		return fasthttpcli.Post(utils.EchoUrl, "hello")
-	}, 10000, "fasthttp_post_10000")
-	benchFn(func() error {
-		return gohttpclient.Get(utils.Url)
-	}, 10000, "gohttpclient_10000")
-	benchFn(func() error {
-		return gohttpclient.Post(utils.EchoUrl, "hello")
-	}, 10000, "gohttpclient_post_10000")
-
-	benchFn(func() error {
-		return goretryablenhttpcli.Get(utils.Url)
-	}, 10000, "goretryablenhttpcli_10000")
-	benchFn(func() error {
-		return goretryablenhttpcli.POST(utils.EchoUrl, "hello")
-	}, 10000, "goretryablenhttpcli_post_10000")
-	fmt.Println(Result())
+	// fmt.Println(Result())
+	testWsEcho()
+	// time.Sleep(time.Second * 10)
+	testWsReceive()
 }
 
 type fn func(url string) error
@@ -90,8 +58,10 @@ func wrapperPost(f func(url string, payload string) error) fn {
 func testRequest() {
 	getFuncs := []fn{http.GET, fasthttpcli.Get, gohttpclient.Get, goretryablenhttpcli.Get, grequestscli.Get, heimdallcli.Get, pestercli.Get, reqcli.Get, gorestycli.Get}
 	postFuncs := []postFn{http.POST, fasthttpcli.Post, gohttpclient.Post, goretryablenhttpcli.POST, grequestscli.Post, heimdallcli.Post, pestercli.Post, reqcli.Post, gorestycli.Post}
-	// times := []int{5000, 10000, 100000}
-	times := []int{100}
+	times := []int{5000, 10000, 100000}
+	getFuncs = []fn{http.GET, fasthttpcli.Get, gohttpclient.Get, goretryablenhttpcli.Get, grequestscli.Get, pestercli.Get, reqcli.Get, gorestycli.Get}
+	postFuncs = []postFn{http.POST, fasthttpcli.Post, gohttpclient.Post, goretryablenhttpcli.POST, grequestscli.Post, pestercli.Post, reqcli.Post, gorestycli.Post}
+	// times := []int{100}
 	paylaods := []string{}
 	paylaodsLen := []int{100, 1024}
 	for _, l := range paylaodsLen {
@@ -107,7 +77,7 @@ func testRequest() {
 				return fn(utils.Url)
 			}, t, name)
 		}
-		fmt.Printf("-------------------------GET %d--------------------------\n", t)
+		fmt.Printf("#### GET%d次\n", t)
 		fmt.Println(Result())
 		for _, payload := range paylaods {
 			for _, fn := range postFuncs {
@@ -118,31 +88,75 @@ func testRequest() {
 					return fn(utils.EchoUrl, payload)
 				}, t, name)
 			}
-			fmt.Printf("-------------------------POST %d %d--------------------------\n", t, len(payload))
+			fmt.Printf("### POST %d次%d字节\n", t, len(payload))
 			fmt.Println(Result())
 		}
 	}
 }
 
-type wsFn func(string, []string) error
+type wsFn func(string) (int64, error)
+type wsInit func(string) error
+type wsClean func()
 
-func testWs() {
-	wsFuncs := []wsFn{gorillawebsocketclient.Start, fastwscli.Start, gobwascli.Start, nhooyrcli.Start, fasthttpwscli.Start, gwscli.Start}
-	// wsFuncs := []wsFn{fastwscli.Start, gobwascli.Start, gwscli.Start}
-	// times := []int{100}
-	messages := make([]string, 0, 5000)
-	for i := 0; i < cap(messages); i++ {
-		randomString := generateRandomString(100)
-		messages = append(messages, randomString)
+func testWsEcho() {
+	initFuncs := []wsInit{gorillawebsocketclient.Init, fastwscli.Init, gobwascli.Init, nhooyrcli.Init, fasthttpwscli.Init}
+	wsFuncs := []wsFn{gorillawebsocketclient.SendReacv, fastwscli.SendReacv, gobwascli.SendReacv, nhooyrcli.SendReacv, fasthttpwscli.SendReacv}
+	cleanFuncs := []wsClean{gorillawebsocketclient.Clean, fastwscli.Clean, gobwascli.Clean, nhooyrcli.Clean, fasthttpwscli.Clean}
+	// randomString := generateRandomString(5000)
+	times := []int{5000, 10000, 100000}
+	paylaods := []string{}
+	paylaodsLen := []int{100, 1024}
+	for _, l := range paylaodsLen {
+		randomString := generateRandomString(l)
+		paylaods = append(paylaods, randomString)
 	}
-	for _, fn := range wsFuncs {
-		funcValue := reflect.ValueOf(fn)
-		funcName := runtime.FuncForPC(funcValue.Pointer()).Name()
-		name := fmt.Sprintf("%s", funcName)
-		benchFn(func() error {
-			return fn(utils.WsUrl, messages)
-		}, 10, name)
+	for _, t := range times {
+		for _, payload := range paylaods {
+			for i, fn := range wsFuncs {
+				funcValue := reflect.ValueOf(fn)
+				funcName := runtime.FuncForPC(funcValue.Pointer()).Name()
+				initFuncs[i]("wss://127.0.0.1:8080/ws/echo")
+				benchFn(func() error {
+					_, err := fn(payload)
+					return err
+				}, t, funcName)
+				cleanFuncs[i]()
+			}
+			fmt.Printf("#### echo%d字节数据%d次\n", len(payload), t)
+			fmt.Println(Result())
+		}
 	}
-	fmt.Printf("-------------------------ws %d--------------------------\n", 100)
-	fmt.Println(Result())
+}
+
+type wsReciveFn func() (int64, error)
+
+func testWsReceive() {
+	initFuncs := []wsInit{gorillawebsocketclient.Init, fastwscli.Init, gobwascli.Init, nhooyrcli.Init, fasthttpwscli.Init}
+	cleanFuncs := []wsClean{gorillawebsocketclient.Clean, fastwscli.Clean, gobwascli.Clean, nhooyrcli.Clean, fasthttpwscli.Clean}
+	wsFuncs := []wsReciveFn{gorillawebsocketclient.Receive, fastwscli.Receive, gobwascli.Receive, nhooyrcli.Receive, fasthttpwscli.Receive}
+	times := []int{5000, 10000, 100000}
+	// paylaodsLen := []int{100, 1024}
+	counts := []int{100, 1024}
+	for _, t := range times {
+		for _, n := range counts {
+			for i, fn := range wsFuncs {
+				funcValue := reflect.ValueOf(fn)
+				funcName := runtime.FuncForPC(funcValue.Pointer()).Name()
+				// name := fmt.Sprintf("%s_%d_%d", funcName, n, t)
+				addr := fmt.Sprintf("%s/message/%d/%d", utils.WsUrl, n, t)
+				err := initFuncs[i](addr)
+				if err != nil {
+					fmt.Println(err)
+					return
+				}
+				benchFn(func() error {
+					_, err := fn()
+					return err
+				}, t, funcName)
+				cleanFuncs[i]()
+			}
+			fmt.Printf("#### 接收%d字节数据%d次\n", n, t)
+			fmt.Println(Result())
+		}
+	}
 }

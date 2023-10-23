@@ -3,58 +3,67 @@ package gobwascli
 import (
 	"context"
 	"crypto/tls"
-	"errors"
-	"flag"
 	"fmt"
 	"log"
 	"net"
-	"time"
 
 	"github.com/gobwas/ws"
+	"github.com/gobwas/ws/wsutil"
 )
 
-func sendReacv(conn net.Conn, message string) (int, error) {
-	conn.SetWriteDeadline(time.Now().Add(time.Second))
-	conn.SetReadDeadline(time.Now().Add(time.Second))
-	conn.Write([]byte(message))
-	buff := make([]byte, 0, len(message))
-	start := 0
-	for {
-		n, err := conn.Read(buff[start:])
-		if err != nil {
-			return 0, err
-		}
-		if start+n == len(buff)-1 {
-			if string(buff) != message {
-				return 0, fmt.Errorf("received unexpected message, %s, %s", string(buff), message)
-			}
-			return 0, errors.New("received unexpected message")
-		}
-	}
-}
+var conn net.Conn
 
-func Start(addr string, message []string) error {
-	flag.Parse()
-	log.SetFlags(0)
-
+func Init(addr string) error {
 	dailer := ws.Dialer{
 		TLSConfig: &tls.Config{
 			InsecureSkipVerify: true,
 		},
 	}
-	c, _, _, err := dailer.Dial(context.Background(), addr)
+	var err error
+	conn, _, _, err = dailer.Dial(context.Background(), addr)
 	if err != nil {
 		return err
 	}
-	defer c.Close()
-	seq := 0
-	for _, m := range message {
-		_, err := sendReacv(c, m)
-		if err != nil {
-			log.Println("write:", err)
-			return err
-		}
-		seq++
-	}
 	return nil
+}
+
+func Clean() {
+	conn.Close()
+}
+
+func SendReacv(message string) (int64, error) {
+	// conn.SetWriteDeadline(time.Now().Add(time.Second))
+	// conn.SetReadDeadline(time.Now().Add(time.Second))
+	// now := time.Now()
+	err := wsutil.WriteClientMessage(conn, ws.OpText, []byte(message))
+	if err != nil {
+		return 0, err
+	}
+	data, _, err := wsutil.ReadServerData(conn)
+	if err != nil {
+		return 0, err
+	}
+	if string(data) != message {
+		return 0, fmt.Errorf("received unexpected message, %s, %s", string(data), message)
+	}
+	return 0, nil
+}
+
+func Receive() (int64, error) {
+	data, _, err := wsutil.ReadServerData(conn)
+	if err != nil {
+		log.Println("receive:", err)
+		return 0, err
+	}
+	// now := time.Now().UnixMicro()
+	if string(data) == "finish" {
+		return 0, nil
+	}
+	// var message common.Message
+	// err = json.Unmarshal(data, &message)
+	// if err != nil {
+	// 	return 0, err
+	// }
+
+	return 0, nil
 }

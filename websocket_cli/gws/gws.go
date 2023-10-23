@@ -37,7 +37,7 @@ func (h *wsHandler) OnMessage(socket *gws.Conn, message *gws.Message) {
 func (h *wsHandler) OnPong(socket *gws.Conn, payload []byte) {}
 func (h *wsHandler) OnPing(socket *gws.Conn, payload []byte) {}
 
-func Start(addr string, message []string) error {
+func Echo(addr string, message []string) error {
 	app, _, err := gws.NewClient(&wsHandler{messages: message}, &gws.ClientOption{TlsConfig: &tls.Config{InsecureSkipVerify: true}})
 	if err != nil {
 		log.Println(err.Error())

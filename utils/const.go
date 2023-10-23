@@ -1,5 +1,5 @@
 package utils
 
-const Url = "https://192.168.0.49:8090"
-const WsUrl = "wss://192.168.0.49:8090/ws/echo"
-const EchoUrl = "https://192.168.0.49:8090/echo"
+const Url = "https://127.0.0.1:8090"
+const WsUrl = "wss://127.0.0.1:8090/ws"
+const EchoUrl = "https://127.0.0.1:8090/echo"

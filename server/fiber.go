@@ -2,10 +2,38 @@ package main
 
 import (
 	"log"
+	"math/rand"
+	"strconv"
+	"time"
 
 	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
 )
+
+var messages map[int][]byte
+
+const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+var rd = rand.New(rand.NewSource(time.Now().UnixNano()))
+
+func generateRandomString(length int) string {
+
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = charset[rd.Intn(len(charset))]
+	}
+
+	return string(b)
+}
+
+func init() {
+	messages = make(map[int][]byte)
+	counts := []int{100, 200, 500, 1024}
+	for _, c := range counts {
+		m := generateRandomString(c)
+		messages[c] = []byte(m)
+	}
+}
 
 func main() {
 	app := fiber.New()
@@ -42,7 +70,6 @@ func main() {
 		)
 		for {
 			if mt, msg, err = c.ReadMessage(); err != nil {
-				log.Println("read:", err)
 				break
 			}
 
@@ -53,6 +80,47 @@ func main() {
 		}
 
 	}))
+
+	app.Get("/ws/message/:size/:count", websocket.New(func(c *websocket.Conn) {
+		// websocket.Conn bindings https://pkg.go.dev/github.com/fasthttp/websocket?tab=doc#pkg-index
+		size := c.Params("size")
+		count := c.Params("count")
+		s, err := strconv.Atoi(size)
+		if err != nil {
+			c.WriteMessage(websocket.CloseUnsupportedData, []byte("size param invalid"))
+			return
+		}
+		n, err := strconv.Atoi(count)
+		if err != nil {
+			c.WriteMessage(websocket.CloseUnsupportedData, []byte("count param invalid"))
+			return
+		}
+		message, ok := messages[s]
+		if !ok {
+			log.Println("unkown size", s)
+			c.WriteMessage(websocket.CloseAbnormalClosure, []byte("unkown size"))
+			return
+		}
+		for i := 0; i < n; i++ {
+			if err = c.WriteMessage(websocket.TextMessage, message); err != nil {
+				log.Println("write:", err)
+				return
+			}
+		}
+		c.WriteMessage(websocket.TextMessage, []byte("finish"))
+	}))
+
+	go func() {
+		quickwsServer()
+	}()
+
+	// go func() {
+	// 	nbioWsServer()
+	// }()
+
+	// go func() {
+	// 	fastHttpWs()
+	// }()
 
 	err := app.ListenTLS(":8090", "../nginx/cert/server.crt", "../nginx/cert/server.key")
 	if err != nil {

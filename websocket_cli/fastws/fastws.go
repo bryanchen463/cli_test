@@ -6,48 +6,59 @@ package fastwscli
 
 import (
 	"crypto/tls"
-	"flag"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/dgrr/fastws"
 )
 
-func sendReacv(conn *fastws.Conn, message string) (int, error) {
+var conn *fastws.Conn
+var buff []byte
+
+func Init(addr string) error {
+	var err error
+	conn, err = fastws.DialTLS(addr, &tls.Config{
+		InsecureSkipVerify: true,
+	})
+	if err != nil {
+		return err
+	}
+	buff = make([]byte, 1024)
+	return nil
+}
+
+func Clean() {
+	conn.Close()
+}
+
+func SendReacv(message string) (int64, error) {
 	conn.WriteMessage(fastws.ModeText, []byte(message))
-	buff := make([]byte, 0, len(message))
-	_, m, err := conn.ReadMessage(buff)
+
+	_, m, err := conn.ReadMessage(buff[:0])
 	if err != nil {
 		return 0, err
 	}
 	if string(m) != message {
 		return 0, fmt.Errorf("received unexpected message, %s, %s", m, message)
 	}
-	return len(m), nil
+	return 0, nil
 }
 
-func Start(addr string, message []string) error {
-	flag.Parse()
-	log.SetFlags(0)
-	c, err := fastws.DialTLS(addr, &tls.Config{
-		InsecureSkipVerify: true,
-	})
+func Receive() (int64, error) {
+	_, data, err := conn.ReadMessage(buff[:0])
 	if err != nil {
-		return err
+		log.Println("receive:", err)
+		return 0, err
 	}
-	defer c.Close()
-	c.ReadTimeout = time.Second
-	c.WriteTimeout = time.Second
-	ticker := time.NewTicker(time.Second)
-	defer ticker.Stop()
-	for _, m := range message {
+	// now := time.Now().UnixMicro()
+	if string(data) == "finish" {
+		return 0, nil
+	}
+	// var message common.Message
+	// err = json.Unmarshal(data, &message)
+	// if err != nil {
+	// 	return 0, err
+	// }
 
-		_, err := sendReacv(c, m)
-		if err != nil {
-			log.Println("write:", err)
-			return err
-		}
-	}
-	return nil
+	return 0, nil
 }

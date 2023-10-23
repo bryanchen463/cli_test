@@ -3,7 +3,6 @@ package nhooyrcli
 import (
 	"context"
 	"crypto/tls"
-	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,26 +11,11 @@ import (
 	"nhooyr.io/websocket"
 )
 
-func sendReacv(conn *websocket.Conn, message string) (int, error) {
-	ctx := context.Background()
-	conn.SetWriteDeadline(time.Now().Add(time.Second))
-	conn.SetReadDeadline(time.Now().Add(time.Second))
-	conn.Write(ctx, websocket.MessageText, []byte(message))
-	_, m, err := conn.Read(ctx)
-	if err != nil {
-		return 0, err
-	}
-	if string(m) != message {
-		return 0, fmt.Errorf("received unexpected message, %s, %s", m, message)
-	}
-	return len(m), nil
-}
+var conn *websocket.Conn
 
-func Start(addr string, message []string) error {
-	flag.Parse()
-	log.SetFlags(0)
-
-	c, _, err := websocket.Dial(context.Background(), addr, &websocket.DialOptions{
+func Init(addr string) error {
+	var err error
+	conn, _, err = websocket.Dial(context.Background(), addr, &websocket.DialOptions{
 		HTTPClient: &http.Client{
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{
@@ -43,16 +27,52 @@ func Start(addr string, message []string) error {
 	if err != nil {
 		return err
 	}
-	defer c.Close(websocket.StatusNormalClosure, "finished")
-
-	seq := 0
-	for _, m := range message {
-		_, err := sendReacv(c, m)
-		if err != nil {
-			log.Println("write:", err)
-			return err
-		}
-		seq++
-	}
 	return nil
+}
+
+func Clean() {
+	defer conn.Close(websocket.StatusNormalClosure, "finished")
+}
+
+func SendReacv(message string) (int64, error) {
+	ctx := context.Background()
+	// ctx, cancel := context.WithTimeout(ctx, time.Second)
+	// defer cancel()
+	// now := time.Now()
+	conn.Write(ctx, websocket.MessageText, []byte(message))
+	_, m, err := conn.Read(ctx)
+	if err != nil {
+		return 0, err
+	}
+	if string(m) != message {
+		return 0, fmt.Errorf("received unexpected message, %s, %s", m, message)
+	}
+	// return int64(time.Since(now).Microseconds()), nil
+	return 0, nil
+}
+
+func Receive() (int64, error) {
+
+	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	defer cancel()
+	_, data, err := conn.Read(ctx)
+	if err != nil {
+		log.Println("receive:", err)
+		return 0, err
+	}
+	if string(data) == "finish" {
+		return 0, nil
+	}
+	// now := time.Now().UnixMicro()
+	// if string(data) == "finish" {
+	// 	return 0, nil
+	// }
+	// var message common.Message
+	// err = json.Unmarshal(data, &message)
+	// if err != nil {
+	// 	return 0, err
+	// }
+
+	return 0, nil
 }

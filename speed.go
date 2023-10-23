@@ -1,7 +1,8 @@
 package main
 
 import (
-	"encoding/json"
+	"fmt"
+	"log"
 	"path"
 	"sort"
 	"sync"
@@ -22,6 +23,10 @@ type SpeedInfo struct {
 	Success int
 	Failed  int
 	Err     string
+}
+
+func (s *SpeedInfo) String() string {
+	return fmt.Sprintf("|%s|%d|%d|%d|%d|%d|%d|%d|\n", s.Name, s.Times, s.Cost.P50, s.Cost.P90, s.Cost.P99, s.Cost.Total, s.Success, s.Failed)
 }
 
 func ConvertCost(costs []int64, total int64) Cost {
@@ -51,12 +56,15 @@ func benchFn(fn func() error, times int, name string) {
 		perStart := time.Now()
 		err := fn()
 		if err != nil {
+			log.Println(err)
+		}
+		if err != nil {
 			failed++
 			e = err.Error()
 		} else {
 			success++
 		}
-		costs = append(costs, int64(time.Since(perStart).Microseconds()))
+		costs = append(costs, int64(time.Since(perStart).Nanoseconds()))
 	}
 	since := time.Since(start)
 	// fmt.Printf("%s run %d cost: %dms\n", name, times, since.Milliseconds())
@@ -64,7 +72,7 @@ func benchFn(fn func() error, times int, name string) {
 	speedInfos.Store(name, SpeedInfo{
 		Name:    name,
 		Times:   times,
-		Cost:    ConvertCost(costs, since.Milliseconds()),
+		Cost:    ConvertCost(costs, since.Microseconds()),
 		Success: success,
 		Failed:  failed,
 		Err:     e,
@@ -82,10 +90,11 @@ func Result() string {
 	sort.Slice(speedList, func(i, j int) bool {
 		return speedList[i].Cost.Total > speedList[j].Cost.Total
 	})
+	res += "||次数|p50(ns)|p90(ns)|p99(ns)|总耗时(us)|成功次数|失败次数|\n"
+	res += "| --- | --- | --- | --- | --- | --- | --- | --- |\n"
 	for _, l := range speedList {
 		l.Name = path.Base(l.Name)
-		v, _ := json.Marshal(l)
-		res += string(v) + "\n"
+		res += l.String()
 	}
 	speedInfos = sync.Map{}
 	return res
