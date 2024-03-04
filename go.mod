@@ -12,7 +12,7 @@ require (
 	github.com/go-resty/resty/v2 v2.10.0
 	github.com/gobwas/ws v1.3.0
 	github.com/gofiber/contrib/websocket v1.2.2
-	github.com/gofiber/fiber/v2 v2.50.0
+	github.com/gofiber/fiber/v2 v2.52.1
 	github.com/gojek/heimdall/v7 v7.0.2
 	github.com/gorilla/websocket v1.5.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
@@ -24,7 +24,7 @@ require (
 	github.com/lxzan/gws v1.6.13
 	github.com/opus-domini/fast-shot v0.7.0
 	github.com/sethgrid/pester v1.2.0
-	github.com/valyala/fasthttp v1.50.0
+	github.com/valyala/fasthttp v1.51.0
 	gopkg.in/h2non/gentleman.v2 v2.0.5
 	nhooyr.io/websocket v1.8.7
 )
@@ -45,13 +45,13 @@ require (
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/pprof v0.0.0-20230901174712-0191c66da455 // indirect
-	github.com/google/uuid v1.3.1 // indirect
+	github.com/google/uuid v1.5.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/klauspost/compress v1.17.1 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.19 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/nbio/st v0.0.0-20140626010706-e9e8d9816f32 // indirect
 	github.com/onsi/ginkgo/v2 v2.12.0 // indirect
